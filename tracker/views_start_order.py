@@ -176,19 +176,19 @@ def api_start_order(request):
                 if vehicle:
                     existing_order = Order.objects.filter(
                         vehicle=vehicle,
-                        status='in_progress'
+                        status__in=['in_progress', 'overdue']
                     ).order_by('-started_at').first()
 
                 if existing_order:
                     order = existing_order
                 else:
                     # Create new order as 'created' (started state). It will auto-progress to 'in_progress' after 10 minutes.
-                    order = Order.objects.create(
+                    # Use OrderService to ensure proper visit tracking
+                    order = OrderService.create_order(
                         customer=customer,
-                        vehicle=vehicle,
+                        order_type=order_type,
                         branch=user_branch,
-                        type=order_type,
-                        status='created',
+                        vehicle=vehicle,
                         description=desc,
                         priority='medium',
                         estimated_duration=estimated_duration if estimated_duration else None,
