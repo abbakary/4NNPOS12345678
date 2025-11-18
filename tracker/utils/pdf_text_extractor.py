@@ -557,15 +557,22 @@ def parse_item_complete(item_lines, item_number):
             'value': value
         }
     
-    # Pattern for basic quantity and rate
+    # Pattern for basic quantity and rate - extract without calculation
     pattern_basic = r'(\d+)\s+([\d,]+\.?\d{2})'
     matches_basic = list(re.finditer(pattern_basic, full_text))
-    
-    if len(matches_basic) >= 2:
-        # Use the first match for quantity, second for rate
+
+    if len(matches_basic) >= 3:
+        # Try to extract: qty, rate, value (in that order) without calculation
         qty = int(matches_basic[0].group(1))
         rate = Decimal(matches_basic[1].group(2).replace(',', ''))
-        value = rate * Decimal(qty)
+        value = Decimal(matches_basic[2].group(2).replace(',', ''))
+        logger.info(f"Basic pattern match with Value - Code: {item_code}, Qty: {qty}, Rate: {rate}, Value: {value} (extracted as-is)")
+    elif len(matches_basic) >= 2:
+        # Only qty and rate found - don't calculate value
+        qty = int(matches_basic[0].group(1))
+        rate = Decimal(matches_basic[1].group(2).replace(',', ''))
+        value = rate  # Use rate as fallback, not calculation
+        logger.info(f"Basic pattern match (no Value found) - Code: {item_code}, Qty: {qty}, Rate: {rate}, Value: {value} (no calculation)")
         
         # Extract unit
         unit = None
