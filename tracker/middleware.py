@@ -30,25 +30,31 @@ class AutoProgressOrdersMiddleware(MiddlewareMixin):
             ten_min_ago = now - timedelta(minutes=10)
             # Auto-progress orders from 'created' to 'in_progress' after 10 minutes
             # Set started_at to the created_at timestamp (when order was initiated)
-            updated = Order.objects.filter(status='created', created_at__lte=ten_min_ago)
+            # Exclude inquiries as they auto-complete
+            updated = Order.objects.filter(status='created', created_at__lte=ten_min_ago).exclude(type='inquiry')
             if updated.exists():
                 # Use F() to set started_at from created_at, preserving the actual start time
                 from django.db.models import F
                 updated.update(status='in_progress', started_at=F('created_at'))
-        except Exception:
+        except Exception as e:
             # Do not block the request pipeline on errors
             pass
 
         # Mark orders as overdue based on working hours (9 working hours = 8 AM to 5 PM)
+        # Only check orders that are in_progress and have started_at set
         try:
             from .utils.time_utils import is_order_overdue
-            in_progress_orders = Order.objects.filter(status='in_progress', started_at__isnull=False).select_related('customer')
+            now = timezone.now()
+            in_progress_orders = Order.objects.filter(
+                status='in_progress',
+                started_at__isnull=False
+            ).exclude(type='inquiry').select_related('customer')
 
             for order in in_progress_orders:
                 if is_order_overdue(order.started_at, now):
                     order.status = 'overdue'
                     order.save(update_fields=['status'])
-        except Exception:
+        except Exception as e:
             # Do not block the request pipeline on errors
             pass
 
