@@ -517,30 +517,30 @@
                   <p class="small text-muted mb-2">Detailed breakdown of invoice items</p>
                 </div>
                 <div class="table-responsive">
-                  <table class="table table-sm table-hover mb-0 invoice-line-items-table">
+                  <table class="table table-sm table-hover mb-0 invoice-line-items-table" style="table-layout: fixed;">
                     <thead class="table-light">
-                      <tr>
-                        <th class="col-line-item-sr">#</th>
-                        <th class="col-line-item-code">Code</th>
-                        <th class="col-line-item-desc">Description</th>
-                        <th class="col-line-item-unit">Unit</th>
-                        <th class="col-line-item-qty">Qty</th>
-                        <th class="col-line-item-rate text-end">Unit Price</th>
-                        <th class="col-line-item-total text-end">Total</th>
+                      <tr style="background-color: #f8f9fa;">
+                        <th class="col-line-item-sr" style="width: 6%; text-align: center;">#</th>
+                        <th class="col-line-item-code" style="width: 12%;">Code</th>
+                        <th class="col-line-item-desc" style="width: 40%; word-break: break-word;">Description</th>
+                        <th class="col-line-item-unit" style="width: 10%;">Unit</th>
+                        <th class="col-line-item-qty" style="width: 10%; text-align: center;">Qty</th>
+                        <th class="col-line-item-rate" style="width: 12%; text-align: right;">Unit Price</th>
+                        <th class="col-line-item-total" style="width: 10%; text-align: right;">Total</th>
                       </tr>
                     </thead>
                     <tbody>
                       {% for item in invoice.line_items.all %}
                       <tr>
-                        <td class="col-line-item-sr text-center"><small class="fw-semibold">{{ forloop.counter }}</small></td>
+                        <td class="col-line-item-sr" style="text-align: center;"><small class="fw-semibold">{{ forloop.counter }}</small></td>
                         <td class="col-line-item-code"><small class="text-muted">{{ item.code|default:'-' }}</small></td>
-                        <td class="col-line-item-desc">
+                        <td class="col-line-item-desc" style="word-break: break-word; white-space: normal; overflow-wrap: break-word;">
                           <small class="text-dark">{{ item.description|default:'-' }}</small>
                         </td>
                         <td class="col-line-item-unit"><small class="text-muted">{{ item.unit|default:'-' }}</small></td>
-                        <td class="col-line-item-qty text-center"><small class="fw-semibold">{{ item.quantity|default:'1' }}</small></td>
-                        <td class="col-line-item-rate text-end"><small>{{ item.unit_price|floatformat:2 }}</small></td>
-                        <td class="col-line-item-total text-end"><small><strong class="text-success">{{ item.line_total|floatformat:2 }}</strong></small></td>
+                        <td class="col-line-item-qty" style="text-align: center;"><small class="fw-semibold">{{ item.quantity|default:'1' }}</small></td>
+                        <td class="col-line-item-rate" style="text-align: right;"><small>{{ item.unit_price|floatformat:2 }}</small></td>
+                        <td class="col-line-item-total" style="text-align: right;"><small><strong class="text-success">{{ item.line_total|floatformat:2 }}</strong></small></td>
                       </tr>
                       {% endfor %}
                     </tbody>
