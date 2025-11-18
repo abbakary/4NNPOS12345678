@@ -311,7 +311,21 @@ def parse_invoice_data(text: str) -> dict:
     normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
     lines = [line.strip() for line in normalized_text.split('\n') if line.strip()]
 
-    # Extract seller information from top of document
+    # Find the "Proforma Invoice" marker to start extraction from there
+    proforma_idx = -1
+    for i, line in enumerate(lines):
+        if re.search(r'Proforma\s+Invoice|PI\s*No|Code\s*No', line, re.I):
+            proforma_idx = i
+            break
+
+    # If no Proforma Invoice found, start from beginning but skip first few lines
+    if proforma_idx == -1:
+        proforma_idx = 0
+
+    # Use only lines from Proforma Invoice marker onwards
+    extraction_lines = lines[proforma_idx:] if proforma_idx >= 0 else lines
+
+    # Extract seller information from original top of document (before Proforma)
     seller_name = None
     seller_address = None
     seller_phone = None
@@ -320,18 +334,11 @@ def parse_invoice_data(text: str) -> dict:
     seller_vat_reg = None
 
     try:
-        top_block = lines[:8] if len(lines) >= 1 else []
-        split_idx = None
-        for i, line in enumerate(top_block):
-            if re.search(r'Proforma|Invoice\b|PI\b|Customer\b|Bill\s*To|Date\b|Customer\s*Reference|Invoice\s*No|Code', line, re.I):
-                split_idx = i
-                break
-        if split_idx is None:
-            split_idx = min(2, len(top_block))
-            
-        seller_lines = top_block[:split_idx]
+        top_block = lines[:proforma_idx] if proforma_idx > 0 else lines[:8]
+
+        seller_lines = top_block
         if seller_lines:
-            seller_name = seller_lines[0] if seller_lines[0] else None
+            seller_name = seller_lines[0] if seller_lines and seller_lines[0] else None
             if len(seller_lines) > 1:
                 seller_address = ' '.join([ln for ln in seller_lines[1:] if ln])
 
@@ -339,11 +346,11 @@ def parse_invoice_data(text: str) -> dict:
             phone_match = re.search(r'(?:Tel\.?|Telephone|Phone)[:\s]*([\+\d][\d\s\-/\(\)\,]{4,}\d)', seller_block_text, re.I)
             if phone_match:
                 seller_phone = phone_match.group(1).strip()
-                
+
             email_match = re.search(r'([\w\.-]+@[\w\.-]+\.\w+)', seller_block_text)
             if email_match:
                 seller_email = email_match.group(1).strip()
-                
+
     except Exception:
         pass
 
