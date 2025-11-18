@@ -439,10 +439,10 @@ def parse_invoice_data(text: str) -> dict:
         r'Ref\.?'
     ])
 
-    # Extract monetary values
+    # Extract monetary values (use extraction_lines that start from Proforma Invoice)
     def find_amount(label_patterns):
         for pattern in label_patterns:
-            for line in lines:
+            for line in extraction_lines:
                 match = re.search(rf'{pattern}\s*[:=]?\s*(?:TSH|TZS|UGX)?\s*([\d,]+\.?\d*)', line, re.I)
                 if match:
                     return match.group(1)
