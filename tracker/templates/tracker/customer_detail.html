@@ -903,12 +903,20 @@
       return '';
     }
     const plateEl=document.getElementById('quickStartPlate');
+    const clearPlateBtn=document.getElementById('clearPlateBtn');
     const startBtn=document.getElementById('quickStartBtn');
     const stopBtn=document.getElementById('quickStopBtn');
     const startedOrderEl=document.getElementById('startedOrderId');
     const orderTypeModal = document.getElementById('quickOrderTypeModal');
     const confirmStartBtn = document.getElementById('confirmQuickStart');
     const orderTypeRadios = document.querySelectorAll('input[name="quickOrderType"]');
+
+    if(clearPlateBtn){
+      clearPlateBtn.addEventListener('click',function(){
+        if(plateEl) plateEl.value='';
+        plateEl.focus();
+      });
+    }
 
     function currentStarted(){return startedOrderEl && startedOrderEl.value ? parseInt(startedOrderEl.value,10):null;}
 
