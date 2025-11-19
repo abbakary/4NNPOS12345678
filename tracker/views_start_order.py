@@ -286,16 +286,12 @@ def started_orders_dashboard(request):
     """
     from django.db.models import Q, Count
 
-    user_branch = get_user_branch(request.user)
     status_filter = request.GET.get('status', '')
     sort_by = request.GET.get('sort_by', '-started_at')
     search_query = request.GET.get('search', '').strip()
 
-    # Build base queryset: include all orders for user's branch, or all orders if user has no branch
-    if user_branch:
-        base_orders = Order.objects.filter(branch=user_branch)
-    else:
-        base_orders = Order.objects.all()
+    # Build base queryset: scope to user's branch/permissions
+    base_orders = scope_queryset(Order.objects.all(), request.user, request)
 
     # Apply status filter
     if status_filter:
