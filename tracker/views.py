@@ -466,7 +466,7 @@ def dashboard(request: HttpRequest):
     # Use completed_today from metrics if available, otherwise calculate fresh
     completed_today_final = metrics.get('completed_today', completed_today)
     
-    context = {**metrics, "recent_orders": recent_orders, "completed_today": completed_today_final, "current_time": timezone.now(), "revenue_by_branch": revenue_by_branch, "revenue_by_branch_tsh": revenue_by_branch_tsh}
+    context = {**metrics, "recent_orders": recent_orders, "completed_today": completed_today_final, "current_time": timezone.now(), "revenue_by_branch_tsh": revenue_by_branch_tsh}
     # render after charts
 
     # Build sales_chart_json (monthly Orders vs Completed for last 12 months)
