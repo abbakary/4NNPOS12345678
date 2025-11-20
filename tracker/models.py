@@ -176,6 +176,9 @@ class Order(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders")
     type = models.CharField(max_length=16, choices=TYPE_CHOICES)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="created")
+    # Mixed order types - JSON array of category names found in invoice items
+    # e.g., ["labour", "tyre service"] when items map to multiple categories
+    mixed_categories = models.TextField(blank=True, null=True, help_text="JSON array of categories detected from invoice items")
     priority = models.CharField(max_length=16, choices=PRIORITY_CHOICES, default="medium")
 
     description = models.TextField(blank=True, null=True)
