@@ -1732,6 +1732,148 @@
 </div>
 {% endif %}
 
+<!-- Upload Additional Invoice Modal -->
+<div class="modal fade" id="uploadAdditionalInvoiceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header bg-light border-bottom">
+        <h5 class="modal-title">
+          <i class="fa fa-file-invoice me-2"></i>Upload & Extract Additional Invoice for Order {{ order.order_number }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="additionalInvoiceForm" method="post" action="{% url 'tracker:api_create_invoice_from_upload' %}">
+        {% csrf_token %}
+        <input type="hidden" name="selected_order_id" value="{{ order.id }}">
+        {% if order.customer %}<input type="hidden" name="customer_id" value="{{ order.customer.id }}">{% endif %}
+
+        <!-- Hidden fields for extracted data -->
+        <div id="additionalInvoiceHiddenFields"></div>
+
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+          <!-- Info Alert -->
+          <div class="alert alert-info mb-3 border-0" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="fa fa-lightbulb me-3" style="font-size: 18px;"></i>
+              <div>
+                <strong>Upload Additional Invoice PDF:</strong> Upload an invoice document to automatically extract data. All extracted data will be displayed below for review before adding to the order. Amounts are preserved exactly as extracted from the PDF without recalculation.
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload Section -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <strong><i class="fa fa-file-upload me-2"></i>Select PDF File</strong>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label">Invoice PDF File *</label>
+                <input type="file" id="additionalInvoiceFile" class="form-control" accept=".pdf" data-max-file-size="50485760" required>
+                <small class="text-muted">PDF files only. Maximum 50MB.</small>
+              </div>
+
+              <div id="additionalUploadError" class="alert alert-danger" style="display:none" role="alert"></div>
+              <div id="additionalExtractionSuccess" class="alert alert-success" style="display:none" role="alert">
+                <i class="fa fa-check-circle me-2"></i>Invoice data extracted successfully! Review the extracted information below.
+              </div>
+              <div id="additionalUploadProgress" class="progress" style="display:none;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" id="additionalUploadProgressBar" role="progressbar" style="width: 0%"></div>
+              </div>
+
+              <button type="button" id="additionalUploadBtn" class="btn btn-primary">
+                <i class="fa fa-upload me-2"></i>Upload & Extract
+              </button>
+            </div>
+          </div>
+
+          <!-- Extracted Data Preview -->
+          <div id="additionalExtractedDataPreview" style="display:none;" class="card mb-3">
+            <div class="card-header bg-light">
+              <strong><i class="fa fa-check-circle me-2 text-success"></i>Extracted Information</strong>
+              <small class="text-muted ms-2">Review before confirming</small>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto; background-color: #f8f9fa;">
+              <!-- Invoice Information -->
+              <div class="mb-3">
+                <h6 class="text-muted mb-2"><i class="fa fa-file-invoice me-2"></i>Invoice Details</h6>
+                <div class="row g-2">
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Invoice Number</small>
+                    <p id="additionalPreviewInvoiceNumber" class="mb-2 fw-medium">-</p>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Invoice Date</small>
+                    <p id="additionalPreviewInvoiceDate" class="mb-2 fw-medium">-</p>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Subtotal</small>
+                    <p id="additionalPreviewSubtotal" class="mb-2 fw-medium">-</p>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Tax/VAT</small>
+                    <p id="additionalPreviewTax" class="mb-2 fw-medium">-</p>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Total Amount</small>
+                    <p id="additionalPreviewTotal" class="mb-2 fw-medium">-</p>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="my-3">
+
+              <!-- Extracted Line Items -->
+              <div id="additionalExtractedLineItemsSection" class="card" style="display:none;">
+                <div class="card-header bg-light">
+                  <strong><i class="fa fa-list me-2"></i>Line Items</strong>
+                  <small class="text-muted ms-2">Items from invoice</small>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0 extracted-line-items-table">
+                      <thead class="table-light">
+                        <tr style="background-color: #f8f9fa;">
+                          <th style="width: 5%; text-align: center;">#</th>
+                          <th style="width: 10%;">Code</th>
+                          <th style="width: 40%; word-break: break-word;">Description</th>
+                          <th style="width: 10%;">Unit</th>
+                          <th style="width: 8%; text-align: center;">Qty</th>
+                          <th style="width: 12%; text-align: right;">Unit Price</th>
+                          <th style="width: 15%; text-align: right;">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody id="additionalLineItemsBody" class="extracted-line-items-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding: 20px; background: #f8f9fa;">
+          <div class="text-center w-100 mb-3">
+            <p class="text-muted small mb-0">
+              <i class="fa fa-info-circle me-1"></i>
+              Upload an invoice PDF to extract data. Review the information and click "Add Invoice" to save and link it to this order.
+            </p>
+          </div>
+          <div class="w-100 d-flex gap-2" style="margin-top: -15px;">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <i class="fa fa-times me-2"></i>Cancel
+            </button>
+            <button type="submit" class="btn btn-success btn-lg flex-grow-1" id="addAdditionalInvoiceBtn" style="font-weight: 600;" disabled>
+              <i class="fa fa-check-circle me-2"></i>Add Invoice
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Cancel Order Modal -->
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
