@@ -404,6 +404,14 @@
         successMsg.innerHTML = '<i class="fa fa-check-circle me-2"></i>Invoice created successfully! Redirecting...';
         successMsg.style.display = 'block';
 
+        // Show toast notification at top-right
+        if (typeof showToast === 'function') {
+          const message = data.customer_found
+            ? 'Customer found! Order created successfully'
+            : 'Invoice created successfully';
+          showToast(message, 'success', 4000);
+        }
+
         setTimeout(() => {
           if (data.redirect_url) {
             window.location.href = data.redirect_url;
