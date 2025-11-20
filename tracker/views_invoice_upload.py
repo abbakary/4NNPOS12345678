@@ -196,31 +196,49 @@ def api_create_invoice_from_upload(request):
                     logger.info(f"Using pre-selected customer for invoice upload: {customer_obj.id}")
                 except (Customer.DoesNotExist, ValueError):
                     return JsonResponse({'success': False, 'message': 'Selected customer not found'})
+
                 # If the selected customer is a temporary placeholder from quick start (Plate/PLATE_),
-                # update it in-place with extracted real customer details.
+                # check if the extracted customer details already exist as a real customer first.
                 try:
                     is_temp = (customer_obj.full_name or '').startswith('Plate ') or (customer_obj.phone or '').startswith('PLATE_')
                     if is_temp and customer_name:
-                        # Map organization fields from either naming convention
-                        org_name = (request.POST.get('organization_name') or request.POST.get('customer_organization_name') or '').strip() or None
-                        tax_num = (request.POST.get('tax_number') or request.POST.get('customer_tax_number') or '').strip() or None
-                        customer_obj.full_name = customer_name or customer_obj.full_name
+                        # CRITICAL: Before updating temp customer, check if extracted details already belong to another customer
+                        # This prevents creating duplicate customers when same invoice is uploaded multiple times
+                        existing_real_customer = None
+
+                        # Check if customer with this phone exists (strong identifier)
                         if customer_phone:
-                            customer_obj.phone = customer_phone
-                        if customer_email:
-                            customer_obj.email = customer_email
-                        if customer_address:
-                            customer_obj.address = customer_address
-                        if customer_type:
-                            customer_obj.customer_type = customer_type
-                        if org_name:
-                            customer_obj.organization_name = org_name
-                        if tax_num:
-                            customer_obj.tax_number = tax_num
-                        customer_obj.save()
-                        logger.info(f"Updated temporary customer {customer_obj.id} with extracted details")
+                            existing_real_customer = Customer.objects.filter(
+                                phone=customer_phone,
+                                branch=user_branch
+                            ).exclude(id=customer_obj.id).first()
+
+                        # If found existing customer with same phone, use that instead
+                        if existing_real_customer:
+                            logger.info(f"Found existing customer {existing_real_customer.id} with phone {customer_phone}, using instead of temp customer {customer_obj.id}")
+                            customer_obj = existing_real_customer
+                        else:
+                            # No existing customer found, update the temporary one in-place
+                            # Map organization fields from either naming convention
+                            org_name = (request.POST.get('organization_name') or request.POST.get('customer_organization_name') or '').strip() or None
+                            tax_num = (request.POST.get('tax_number') or request.POST.get('customer_tax_number') or '').strip() or None
+                            customer_obj.full_name = customer_name or customer_obj.full_name
+                            if customer_phone:
+                                customer_obj.phone = customer_phone
+                            if customer_email:
+                                customer_obj.email = customer_email
+                            if customer_address:
+                                customer_obj.address = customer_address
+                            if customer_type:
+                                customer_obj.customer_type = customer_type
+                            if org_name:
+                                customer_obj.organization_name = org_name
+                            if tax_num:
+                                customer_obj.tax_number = tax_num
+                            customer_obj.save()
+                            logger.info(f"Updated temporary customer {customer_obj.id} with extracted details from invoice")
                 except Exception as e:
-                    logger.warning(f"Failed to update temporary customer: {e}")
+                    logger.warning(f"Failed to check/update temporary customer: {e}")
             else:
                 # Require minimum customer info only when creating/looking up by details
                 if not customer_name:
