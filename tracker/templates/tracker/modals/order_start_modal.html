@@ -101,97 +101,11 @@
           </div>
         </div>
 
-        <!-- Step 1: Order Type Selection -->
+        <!-- Hidden order type field - auto-set from invoice extraction -->
+        <input type="hidden" name="order_type" value="service">
+
+        <!-- Step 1: Customer Type Selection (Previously Step 2) -->
         <div class="form-step d-none" id="step1" data-step="1">
-          <h6 class="fw-bold mb-3">
-            <i class="fa fa-list me-2 text-primary"></i>What type of order?
-          </h6>
-          
-          <div class="row g-3">
-            <!-- Service Order -->
-            <div class="col-md-6">
-              <label class="order-type-card card h-100 cursor-pointer order-type-option" data-type="service">
-                <div class="card-body text-center py-4">
-                  <div class="order-type-icon mb-3">
-                    <i class="fa fa-wrench fa-2x text-primary"></i>
-                  </div>
-                  <h6 class="fw-bold mb-2">Service</h6>
-                  <p class="text-muted small mb-2">Vehicle maintenance and repairs</p>
-                  <div class="eta-info mt-3">
-                    <small class="badge bg-light text-dark">
-                      <i class="fa fa-clock me-1"></i>ETA: Auto-calculated from services
-                    </small>
-                  </div>
-                </div>
-                <input type="radio" name="order_type" value="service" class="d-none">
-              </label>
-            </div>
-
-            <!-- Sales Order -->
-            <div class="col-md-6">
-              <label class="order-type-card card h-100 cursor-pointer order-type-option" data-type="sales">
-                <div class="card-body text-center py-4">
-                  <div class="order-type-icon mb-3">
-                    <i class="fa fa-shopping-cart fa-2x text-success"></i>
-                  </div>
-                  <h6 class="fw-bold mb-2">Sales</h6>
-                  <p class="text-muted small mb-2">Product or item sales</p>
-                  <div class="eta-info mt-3">
-                    <small class="badge bg-light text-dark">
-                      <i class="fa fa-clock me-1"></i>ETA: Based on tire services
-                    </small>
-                  </div>
-                </div>
-                <input type="radio" name="order_type" value="sales" class="d-none">
-              </label>
-            </div>
-
-            <!-- Inquiry -->
-            <div class="col-md-6">
-              <label class="order-type-card card h-100 cursor-pointer order-type-option" data-type="inquiry">
-                <div class="card-body text-center py-4">
-                  <div class="order-type-icon mb-3">
-                    <i class="fa fa-question-circle fa-2x text-info"></i>
-                  </div>
-                  <h6 class="fw-bold mb-2">Inquiry</h6>
-                  <p class="text-muted small mb-2">Customer question or consultation</p>
-                  <div class="eta-info mt-3">
-                    <small class="badge bg-light text-dark">
-                      <i class="fa fa-clock me-1"></i>Auto-completed
-                    </small>
-                  </div>
-                </div>
-                <input type="radio" name="order_type" value="inquiry" class="d-none">
-              </label>
-            </div>
-
-            <!-- Upload from Document -->
-            <div class="col-md-6">
-              <label class="order-type-card card h-100 cursor-pointer order-type-option" data-type="upload">
-                <div class="card-body text-center py-4">
-                  <div class="order-type-icon mb-3">
-                    <i class="fa fa-file-upload fa-2x text-warning"></i>
-                  </div>
-                  <h6 class="fw-bold mb-2">From Document</h6>
-                  <p class="text-muted small mb-2">Extract data from invoice/PDF</p>
-                  <div class="eta-info mt-3">
-                    <small class="badge bg-light text-dark">
-                      <i class="fa fa-magic me-1"></i>Auto-extract
-                    </small>
-                  </div>
-                </div>
-                <input type="radio" name="order_type" value="upload" class="d-none">
-              </label>
-            </div>
-          </div>
-
-          <div id="orderTypeError" class="alert alert-danger mt-3" style="display: none;">
-            <small><i class="fa fa-exclamation-circle me-1"></i><span></span></small>
-          </div>
-        </div>
-
-        <!-- Step 2: Customer Type Selection -->
-        <div class="form-step d-none" id="step2" data-step="2">
           <h6 class="fw-bold mb-3">
             <i class="fa fa-user me-2 text-primary"></i>Customer Details
           </h6>
