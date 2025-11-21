@@ -5700,9 +5700,6 @@ def api_inquiry_bulk_action(request: HttpRequest):
             message = f'{count} inquiry(ies) marked as pending'
 
         elif action == 'export_csv':
-            import csv
-            from django.http import HttpResponse
-
             response = HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename="inquiries.csv"'
 
