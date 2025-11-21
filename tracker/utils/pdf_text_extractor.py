@@ -208,18 +208,29 @@ def extract_customer_address(lines):
             address_lines.append(line.strip())
             # Look for continuation lines
             j = i + 1
-            while j < len(lines) and j < i + 5:  # Increased range
+            while j < len(lines) and j < i + 6:  # Increased range
                 next_line = lines[j].strip()
 
+                if not next_line:
+                    j += 1
+                    continue
+
                 # Stop at clear field markers
-                if re.search(r'^(?:Tel|Fax|Email|Attended|Kind|Reference|Dear\s+Sir)\s*[\t:]', next_line, re.I):
+                if re.search(r'^(?:Tel|Fax|Email|Attended|Kind|Reference|Dear\s+Sir|S\s*No|Item\s+Code)\s*[\t:]', next_line, re.I):
                     break
 
+                # Always include lines with TANZANIA or country indicators
+                if re.search(r'TANZANIA|UGANDA|KENYA|ETHIOPIA', next_line, re.I):
+                    address_lines.append(next_line)
+                    j += 1
+                    continue
+
                 # Include address-like lines
-                if (re.search(r'[A-Z]+\s*[A-Z]*\s*,?\s*[A-Z]*\s*TANZANIA', next_line, re.I) or
+                if (re.search(r'[A-Z]+\s*[A-Z]*\s*,?\s*[A-Z]*\s*(?:TANZANIA|UGANDA|KENYA)', next_line, re.I) or
                     re.search(r'DAR\s*ES\s*SALAAM', next_line, re.I) or
                     re.search(r'PLOT\s*\d+', next_line, re.I) or
-                    re.search(r'[A-Z]+\s*ROAD', next_line, re.I)):
+                    re.search(r'[A-Z]+\s*ROAD', next_line, re.I) or
+                    re.search(r'P\.?O\.?\s*BOX', next_line, re.I)):
                     address_lines.append(next_line)
                     j += 1
                 else:
