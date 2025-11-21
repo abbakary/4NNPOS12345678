@@ -13,23 +13,25 @@ register = template.Library()
 def order_type_display(order):
     """
     Display order type with mixed type support.
-    Shows "Labour and Service" for mixed types.
+    Shows "Labour and Service", "Service and Sales", etc. for mixed types.
     """
     if not order:
         return "Unknown"
-    
+
     if order.type == 'mixed' and order.mixed_categories:
         try:
             categories = json.loads(order.mixed_categories)
             # Determine order types from categories
             order_types = set()
             for category in categories:
-                category_lower = category.lower()
-                if 'tyre' in category_lower or 'service' in category_lower:
-                    order_types.add('service')
+                category_lower = category.lower().strip()
+                if category_lower == 'sales':
+                    order_types.add('sales')
                 elif category_lower == 'labour':
                     order_types.add('labour')
-            
+                elif 'tyre' in category_lower or 'service' in category_lower:
+                    order_types.add('service')
+
             # Format display
             if order_types:
                 type_names = sorted(list(order_types))
@@ -37,7 +39,7 @@ def order_type_display(order):
                 return formatted
         except (json.JSONDecodeError, TypeError):
             pass
-    
+
     return _format_type(order.type)
 
 
