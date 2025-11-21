@@ -4049,17 +4049,6 @@ def remove_invoice_link(request: HttpRequest, pk: int):
 
 
 
-@login_required
-def reports(request: HttpRequest):
-    from datetime import date, timedelta
-    from django.db.models import Count
-    from django.db.models.functions import TruncDate
-    import json
-    
-    f_from = request.GET.get("from")
-    f_to = request.GET.get("to")
-    f_type = request.GET.get("type", "all")
-    period = request.GET.get("period", "")
     # If no explicit range provided, derive from period
     today = date.today()
     if (not f_from or not f_to) and period:
