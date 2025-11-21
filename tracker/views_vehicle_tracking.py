@@ -109,10 +109,13 @@ def api_vehicle_tracking_data(request):
         except:
             start_date = end_date - timedelta(days=30)
         
-        # Query vehicles that have invoices or orders (service-type vehicles)
+        # Query vehicles that came for service:
+        # 1. Vehicles with invoices (uploaded invoices = service reference)
+        # 2. Vehicles with service-type orders
+        # 3. Vehicles in both categories
         vehicles_query = Vehicle.objects.filter(
-            Q(invoices__isnull=False) | Q(orders__type='service'),
-            invoices__invoice_date__range=[start_date, end_date] if period != 'all' else Q()
+            Q(invoices__invoice_date__range=[start_date, end_date]) |
+            Q(orders__created_at__date__range=[start_date, end_date], orders__type='service')
         ).distinct()
         
         if user_branch:
