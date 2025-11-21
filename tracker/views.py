@@ -5518,6 +5518,221 @@ def update_inquiry_status(request: HttpRequest, pk: int):
 
 
 @login_required
+@require_http_methods(["POST"])
+def api_create_inquiry(request: HttpRequest):
+    """API endpoint to create a new inquiry"""
+    from .forms import InquiryCreationForm
+    from .models import InquiryNote
+
+    if request.method == 'POST':
+        form = InquiryCreationForm(request.POST)
+
+        if form.is_valid():
+            try:
+                customer = form.cleaned_data['customer']
+                inquiry_type = form.cleaned_data['inquiry_type']
+                questions = form.cleaned_data['questions']
+                priority = form.cleaned_data['priority']
+                follow_up_date = form.cleaned_data.get('follow_up_date')
+
+                # Create inquiry order
+                inquiry = Order.objects.create(
+                    order_number=Order()._generate_order_number(),
+                    type='inquiry',
+                    status='completed',
+                    customer=customer,
+                    inquiry_type=inquiry_type,
+                    questions=questions,
+                    priority=priority,
+                    follow_up_date=follow_up_date,
+                    branch=get_user_branch(request.user),
+                    created_at=timezone.now(),
+                    started_at=timezone.now(),
+                    completed_at=timezone.now(),
+                )
+
+                # Create initial note
+                InquiryNote.objects.create(
+                    inquiry=inquiry,
+                    note_type='status_change',
+                    content=f"Inquiry created: {inquiry_type}",
+                    created_by=request.user,
+                    is_visible_to_customer=True
+                )
+
+                try:
+                    add_audit_log(request.user, 'inquiry_create', f"Created inquiry #{inquiry.id} for {customer.full_name} ({inquiry_type})")
+                except Exception:
+                    pass
+
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Inquiry created successfully',
+                    'inquiry_id': inquiry.id,
+                    'redirect': reverse('tracker:inquiry_detail', args=[inquiry.id])
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': str(e)
+                }, status=400)
+        else:
+            errors = {field: [str(error) for error in field_errors]
+                     for field, field_errors in form.errors.items()}
+            return JsonResponse({
+                'success': False,
+                'message': 'Form validation failed',
+                'errors': errors
+            }, status=400)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def api_add_inquiry_note(request: HttpRequest, pk: int):
+    """API endpoint to add a note or response to an inquiry"""
+    from .forms import InquiryNoteForm
+    from .models import InquiryNote
+
+    inquiry = get_object_or_404(Order, pk=pk, type='inquiry')
+
+    if request.method == 'POST':
+        form = InquiryNoteForm(request.POST)
+
+        if form.is_valid():
+            try:
+                note_type = form.cleaned_data['note_type']
+                content = form.cleaned_data['content']
+
+                # Create note
+                note = InquiryNote.objects.create(
+                    inquiry=inquiry,
+                    note_type=note_type,
+                    content=content,
+                    created_by=request.user,
+                    is_visible_to_customer=(note_type == 'response')
+                )
+
+                # Update inquiry status if not already completed
+                if inquiry.status == 'created':
+                    inquiry.status = 'in_progress'
+                    inquiry.save(update_fields=['status'])
+
+                try:
+                    add_audit_log(request.user, 'inquiry_note_add', f"Added {note_type} to inquiry #{inquiry.id}")
+                except Exception:
+                    pass
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{note_type.title()} added successfully',
+                    'note_id': note.id,
+                    'created_at': note.created_at.isoformat(),
+                    'created_by': request.user.first_name or request.user.username
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': str(e)
+                }, status=400)
+        else:
+            errors = {field: [str(error) for error in field_errors]
+                     for field, field_errors in form.errors.items()}
+            return JsonResponse({
+                'success': False,
+                'message': 'Form validation failed',
+                'errors': errors
+            }, status=400)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+def api_inquiry_notes(request: HttpRequest, pk: int):
+    """API endpoint to get inquiry notes/timeline"""
+    from .models import InquiryNote
+
+    inquiry = get_object_or_404(Order, pk=pk, type='inquiry')
+
+    # Get all notes (only show non-visible notes to staff)
+    notes = InquiryNote.objects.filter(inquiry=inquiry)
+
+    notes_data = [
+        {
+            'id': note.id,
+            'type': note.note_type,
+            'type_display': note.get_note_type_display(),
+            'content': note.content,
+            'created_by': note.created_by.first_name or note.created_by.username if note.created_by else 'System',
+            'created_at': note.created_at.isoformat(),
+            'is_visible_to_customer': note.is_visible_to_customer
+        }
+        for note in notes
+    ]
+
+    return JsonResponse({
+        'success': True,
+        'notes': notes_data
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def api_inquiry_bulk_action(request: HttpRequest):
+    """API endpoint for bulk inquiry actions"""
+    action = request.POST.get('action')
+    inquiry_ids = request.POST.getlist('inquiry_ids[]')
+
+    if not inquiry_ids or not action:
+        return JsonResponse({'success': False, 'message': 'Invalid parameters'}, status=400)
+
+    try:
+        inquiries = Order.objects.filter(pk__in=inquiry_ids, type='inquiry')
+
+        if action == 'mark_resolved':
+            count = inquiries.update(status='completed', completed_at=timezone.now())
+            message = f'{count} inquiry(ies) marked as resolved'
+
+        elif action == 'mark_pending':
+            count = inquiries.update(status='in_progress')
+            message = f'{count} inquiry(ies) marked as pending'
+
+        elif action == 'export_csv':
+            import csv
+            from django.http import HttpResponse
+
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="inquiries.csv"'
+
+            writer = csv.writer(response)
+            writer.writerow(['ID', 'Customer', 'Type', 'Status', 'Priority', 'Created', 'Follow-up Date'])
+
+            for inq in inquiries:
+                writer.writerow([
+                    inq.id,
+                    inq.customer.full_name,
+                    inq.inquiry_type,
+                    inq.get_status_display(),
+                    inq.priority,
+                    inq.created_at.strftime('%Y-%m-%d %H:%M'),
+                    inq.follow_up_date.strftime('%Y-%m-%d') if inq.follow_up_date else ''
+                ])
+
+            return response
+
+        try:
+            add_audit_log(request.user, 'inquiry_bulk_action', f"Bulk action '{action}' on {len(inquiry_ids)} inquiries")
+        except Exception:
+            pass
+
+        return JsonResponse({'success': True, 'message': message})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+@login_required
 def system_settings(request: HttpRequest):
     def defaults():
         return {
