@@ -5569,8 +5569,7 @@ def api_create_inquiry(request: HttpRequest):
                 return JsonResponse({
                     'success': True,
                     'message': 'Inquiry created successfully',
-                    'inquiry_id': inquiry.id,
-                    'redirect': reverse('tracker:inquiry_detail', args=[inquiry.id])
+                    'inquiry_id': inquiry.id
                 })
             except Exception as e:
                 return JsonResponse({
