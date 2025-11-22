@@ -94,13 +94,17 @@ def api_vehicle_tracking_data(request):
         status_filter = request.GET.get('status', 'all')
         order_type_filter = request.GET.get('order_type', 'all')
         search_query = request.GET.get('search', '').strip()
-        
+
+        # Filter out 'undefined' from JavaScript (when no search is entered)
+        if search_query == 'undefined' or search_query == 'null':
+            search_query = ''
+
         # Parse dates
         try:
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else timezone.now().date()
         except:
             end_date = timezone.now().date()
-        
+
         try:
             if start_date_str:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -108,7 +112,9 @@ def api_vehicle_tracking_data(request):
                 start_date = end_date - timedelta(days=30)
         except:
             start_date = end_date - timedelta(days=30)
-        
+
+        logger.info(f"Vehicle tracking query - Period: {period}, Date range: {start_date} to {end_date}, Search: '{search_query}'")
+
         # Query vehicles that came for service:
         # 1. Vehicles with invoices (uploaded invoices = service reference)
         # 2. Vehicles with service-type orders
@@ -117,18 +123,21 @@ def api_vehicle_tracking_data(request):
             Q(invoices__invoice_date__range=[start_date, end_date]) |
             Q(orders__created_at__date__range=[start_date, end_date], orders__type='service')
         ).distinct()
-        
+
         if user_branch:
             vehicles_query = vehicles_query.filter(
                 Q(invoices__branch=user_branch) | Q(orders__branch=user_branch)
             ).distinct()
-        
+
+        logger.info(f"Vehicles found before search filter: {vehicles_query.count()}")
+
         # Apply search filter
         if search_query:
             vehicles_query = vehicles_query.filter(
                 Q(plate_number__icontains=search_query) |
                 Q(customer__full_name__icontains=search_query)
             )
+            logger.info(f"Vehicles found after search filter: {vehicles_query.count()}")
         
         vehicle_data = []
         
