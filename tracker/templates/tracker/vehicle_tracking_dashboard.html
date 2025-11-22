@@ -481,15 +481,28 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let trendChart, typeChart, topVehiclesChart;
-    
+
+    // Initialize filters with defaults if not provided from server
+    const serverStartDate = '{{ start_date }}' || '';
+    const serverEndDate = '{{ end_date }}' || '';
+
+    // Parse server dates or generate defaults
+    let defaultEndDate = new Date();
+    let defaultStartDate = new Date();
+    defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+
     const filters = {
         period: 'monthly',
-        start_date: '{{ start_date }}',
-        end_date: '{{ end_date }}',
+        start_date: serverStartDate || defaultStartDate.toISOString().split('T')[0],
+        end_date: serverEndDate || defaultEndDate.toISOString().split('T')[0],
         status: 'all',
         order_type: 'all',
         search: ''
     };
+
+    // Set initial date inputs
+    document.getElementById('startDate').value = filters.start_date;
+    document.getElementById('endDate').value = filters.end_date;
     
     // Period buttons
     document.querySelectorAll('.period-btn').forEach(btn => {
