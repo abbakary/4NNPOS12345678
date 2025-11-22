@@ -354,15 +354,15 @@
               </td>
               <td>
                 {% if o.type == 'mixed' %}
-                  <span class="badge order-type-mixed rounded-pill" title="Mixed order containing multiple types"><i class="fa fa-layer-group me-1"></i>{{ o|order_type_display }}</span>
+                  <span class="badge order-type-mixed rounded-pill" title="Mixed order containing multiple types"><i class="fa fa-layer-group me-2"></i>Mixed</span>
                 {% elif o.type == 'service' %}
-                  <span class="badge order-type-service rounded-pill"><i class="fa fa-wrench me-1"></i>Service</span>
+                  <span class="badge order-type-service rounded-pill"><i class="fa fa-wrench me-2"></i>Service</span>
                 {% elif o.type == 'sales' %}
-                  <span class="badge order-type-sales rounded-pill"><i class="fa fa-shopping-cart me-1"></i>Sales</span>
+                  <span class="badge order-type-sales rounded-pill"><i class="fa fa-shopping-cart me-2"></i>Sales</span>
                 {% elif o.type == 'labour' %}
-                  <span class="badge order-type-labour rounded-pill"><i class="fa fa-tools me-1"></i>Labour</span>
+                  <span class="badge order-type-labour rounded-pill"><i class="fa fa-tools me-2"></i>Labour</span>
                 {% elif o.type == 'inquiry' %}
-                  <span class="badge order-type-inquiry rounded-pill"><i class="fa fa-question-circle me-1"></i>Inquiry</span>
+                  <span class="badge order-type-inquiry rounded-pill"><i class="fa fa-question-circle me-2"></i>Inquiry</span>
                 {% else %}
                   <span class="badge bg-secondary rounded-pill">{{ o.type }}</span>
                 {% endif %}
@@ -941,58 +941,87 @@ td.text-end:last-child {
 
 /* Order Type Badge Styling - Improved Colors and Visibility */
 .order-type-mixed {
-    background-color: #8b5cf6;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
     color: white;
-    font-weight: 600;
-    letter-spacing: 0.3px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(124, 58, 237, 0.3);
 }
 
 .order-type-mixed:hover {
-    background-color: #7c3aed;
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
     text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(124, 58, 237, 0.4);
 }
 
 .order-type-service {
-    background-color: #0d6efd;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
     color: white;
-    font-weight: 500;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
 }
 
 .order-type-service:hover {
-    background-color: #0b5ed7;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
     text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);
 }
 
 .order-type-sales {
-    background-color: #198754;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
     color: white;
-    font-weight: 500;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
 }
 
 .order-type-sales:hover {
-    background-color: #157347;
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
     text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.4);
 }
 
 .order-type-labour {
-    background-color: #0dcaf0;
-    color: #212529;
-    font-weight: 600;
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    color: white;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(8, 145, 178, 0.3);
 }
 
 .order-type-labour:hover {
-    background-color: #0aa2c0;
+    background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%);
     text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(8, 145, 178, 0.4);
 }
 
 .order-type-inquiry {
-    background-color: #0dcaf0;
-    color: #212529;
-    font-weight: 500;
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    color: white;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
 }
 
 .order-type-inquiry:hover {
-    background-color: #0aa2c0;
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
     text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(217, 119, 6, 0.4);
 }
 </style>
