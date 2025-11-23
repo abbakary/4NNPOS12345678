@@ -467,9 +467,11 @@ def api_create_invoice_from_upload(request):
                     logger.warning(f"Failed to create/get vehicle for customer {customer_obj.id}: {e}")
                     vehicle = None
 
-            # Get existing started order if provided
+            # Get existing started order if provided or auto-match by plate
             selected_order_id = request.POST.get('selected_order_id')
             order = None
+
+            # Priority 1: Use explicitly selected order
             if selected_order_id:
                 try:
                     is_admin = getattr(request.user, 'is_superuser', False) or getattr(request.user, 'is_staff', False)
@@ -481,6 +483,27 @@ def api_create_invoice_from_upload(request):
                 except Exception as e:
                     logger.warning(f"Could not find existing order {selected_order_id}: {e}")
                     pass
+
+            # Priority 2: Auto-match started order by plate number if no order selected
+            # This handles the case where user starts an order with a plate, then uploads invoice with same plate
+            if not order and vehicle:
+                try:
+                    # Look for started (created) service orders with the same vehicle
+                    is_admin = getattr(request.user, 'is_superuser', False) or getattr(request.user, 'is_staff', False)
+                    query = Order.objects.filter(
+                        vehicle=vehicle,
+                        customer=customer_obj,
+                        status='created'  # Only match unstarted orders
+                    ).order_by('-created_at')
+
+                    if user_branch and not is_admin:
+                        query = query.filter(branch=user_branch)
+
+                    order = query.first()
+                    if order:
+                        logger.info(f"Auto-matched invoice to started order {order.id} by plate number {plate}")
+                except Exception as e:
+                    logger.warning(f"Failed to auto-match order by plate number: {e}")
 
             # Extract item codes for order type detection
             item_codes = request.POST.getlist('item_code[]')
