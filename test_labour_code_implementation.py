@@ -52,7 +52,7 @@ def test_order_type_detection():
     # Create test labour codes
     labour_codes = [
         {"code": "22001", "description": "BRAKE SERVICE", "category": "labour"},
-        {"code": "21035", "description": "WHEEL BALANCE", "category": "tyre service"},
+        {"code": "21035", "description": "WHEEL BALANCE", "category": "service"},
     ]
     
     for lc in labour_codes:
@@ -90,7 +90,7 @@ def test_order_type_detection():
     print(f"  Order Type: {order_type}")
     print(f"  Categories: {categories}")
     assert order_type == "mixed", f"Expected 'mixed', got '{order_type}'"
-    assert "labour" in categories and "tyre service" in categories
+    assert "labour" in categories and "service" in categories
     print("  ��� PASS")
     
     # Test 4: Unmapped codes (treated as sales)
@@ -175,7 +175,7 @@ def test_order_model_mixed_categories():
     )
     
     # Create order with mixed type
-    categories = ["labour", "tyre service"]
+    categories = ["labour", "service"]
     order = Order.objects.create(
         order_number="TEST-ORDER-001",
         customer=customer,
